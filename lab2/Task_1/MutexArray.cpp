@@ -2,6 +2,10 @@
 #include <mutex>
 
 class MutexArray : public BaseArray {
+private:
+    int index;
+    std::mutex mutex;
+
 public: 
     MutexArray() : BaseArray() {
         index = 0;
@@ -12,17 +16,15 @@ public:
             mutex.lock();
             int cur_index = index;
             index++;
-            mutex.unlock();
             if (cur_index < NumTasks) {
                 byte_arr[cur_index] ++;
-                std::this_thread::sleep_for(std::chrono::nanoseconds(10));
+                this_thread::sleep_for(chrono::nanoseconds(10));
+                mutex.unlock();
             }
             else {
-                return;
+                mutex.unlock();
+                break;
             }
         }
     }
-private:
-    int index;
-    std::mutex mutex;
 };
