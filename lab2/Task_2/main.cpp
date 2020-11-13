@@ -1,7 +1,7 @@
-﻿
-#include "DynamicMutexQueue.cpp"
+﻿#include "DynamicMutexQueue.cpp"
 #include <cassert>
 #include "FixedMutexQueue.cpp"
+#include "FixedAtomicQueue.cpp"
 
 void startTask(Queue& q, int producerNum, int consumerNum, int taskNum) {
     atomic_int sum(0);
@@ -34,7 +34,7 @@ void startTask(Queue& q, int producerNum, int consumerNum, int taskNum) {
             threads[i].join();
     }
 
-    cout << "consumerNum: " << consumerNum << " producerNum: " << producerNum << endl;
+    cout << q.to_string() << "consumerNum: " << consumerNum << " producerNum: " << producerNum << endl;
     assert(sum == taskNum * producerNum);
 }
 
@@ -57,10 +57,20 @@ int main() {
     {
         for (auto consumer_num : consumer_nums)
         {
-            DynamicMutexQueue q;
-            measureTime(q, producer_num, consumer_num, task_num);
+            DynamicMutexQueue DMQ;
+            measureTime(DMQ, producer_num, consumer_num, task_num);
 
-
+            for (auto size : queue_size)
+            {
+                FixedMutexQueue FMQ(size);
+                cout << "Queue size: " << size << endl;
+                measureTime(FMQ, producer_num, consumer_num, task_num);
+            
+                
+                FixedAtomicQueue FAQ(size);
+                cout << "Queue size: " << size << endl;
+                measureTime(FAQ, producer_num, consumer_num, task_num);
+            }
         }
     }
 
