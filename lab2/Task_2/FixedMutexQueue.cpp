@@ -1,20 +1,21 @@
 #include "Queue.cpp"
 
-class MutexFixedQueue : public Queue
+class FixedMutexQueue : public Queue
 {
 private: 	
 	queue<uint8_t> queue;
-	size_t size;
+	size_t size_;
 	mutex mutex;
 	condition_variable push_condition_variable;
 	condition_variable pop_condition_variable;
 
 public:
+	FixedMutexQueue(size_t size) : size_(size) {}
 
 	void push(uint8_t val) override
 	{
 		unique_lock<std::mutex> unq_lock(mutex);
-		push_condition_variable.wait(unq_lock, [&] { return queue.size() < size; });
+		push_condition_variable.wait(unq_lock, [&] { return queue.size() < size_; });
 		queue.push(val);
 		pop_condition_variable.notify_one();
 	}
@@ -31,5 +32,9 @@ public:
 		}
 		else
 			return false;
+	}
+	string to_string() override
+	{
+		return "FixedMutexQueue ";
 	}
 };
