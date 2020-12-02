@@ -16,13 +16,12 @@ public:
             mutex.lock();
             int cur_index = index;
             index++;
+            mutex.unlock();
             if (cur_index < NumTasks) {
                 byte_arr[cur_index] ++;
                 this_thread::sleep_for(chrono::nanoseconds(10));
-                mutex.unlock();
             }
             else {
-                mutex.unlock();
                 break;
             }
         }
