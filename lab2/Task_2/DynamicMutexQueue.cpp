@@ -15,8 +15,8 @@ public:
     bool pop(uint8_t& val) override {
         mutex.lock();
         if (queue.empty()) {
-            this_thread::sleep_for(chrono::milliseconds(1));
             mutex.unlock();
+            this_thread::sleep_for(chrono::milliseconds(1));
             return false;
         }
         val = queue.front();
