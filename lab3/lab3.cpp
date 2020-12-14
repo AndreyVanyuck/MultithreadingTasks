@@ -1,66 +1,55 @@
 #include <iostream>
 #include <omp.h>
+#include <cassert>
+
+#define N 20000
 
 using namespace std;
 
-int const N = 3400;
-int const M = 10110;
+int main() {
+    long long a[N], b[N];
+    long long result_parallel[N], result_simple[N];
+    int i, j;
 
-double calculate_time(int* a, int* b)
-{
-	long long result[N + M - 1];
-	double time_start = omp_get_wtime();
-	for (int i = 0; i < N + M - 1; i++)
-	{
-		long long sum = 0;
-		for (int j = 0; j < M; j++)
-		{
-			if (i - j < N)
-				sum += a[i - j] * b[j];
-		}
-		result[i] = sum;
-	}
-	double time_end = omp_get_wtime();
-	return time_end - time_start;
-}
+    for (i = 0; i < N; i++) {
+        a[i] = rand();
+        b[i] = rand();
+        result_parallel[i] = 0;
+        result_simple[i] = 0;
+    }
+    double parallel_time_start = omp_get_wtime();
 
-double calculate_parallel_time(int* a, int* b)
-{
-	long long result[N + M - 1];
-	double time_start = omp_get_wtime();
-	int i, j;
+#pragma omp parallel for private(i,j)
+    for (i = 0; i < N; i++) {
+        for (j = 0; j < N; j++) {
+            if (i - j < N) {
+                result_parallel[i] += a[i - j] * b[j];
+            }
+        }
+    }
+    double parallel_time_end = omp_get_wtime();
 
-	omp_set_num_threads(4);
-#pragma omp parallel for shared(a, b, result) private(i, j)
-	for (i = 0; i < N + M - 1; i++)
-	{
-		long long sum = 0;
-		for (j = 0; j < M; j++)
-		{
-			if (i - j < N)
-				sum += a[i - j] * b[j];
-		}
-		result[i] = sum;
-	}
-	double time_end = omp_get_wtime();
-	return time_end - time_start;
-}
+    cout << "Parallel time " << parallel_time_end - parallel_time_start << endl;
 
-int main()
-{
-	int a[N], b[M];
+    double simple_time_start = omp_get_wtime();
+    
+    for (i = 0; i < N; i++) {
+        for (j = 0; j < N; j++) {
+            if (i - j < N) {
+                result_simple[i] += a[i - j] * b[j];
+            }
+        }
+    }
 
-	for (int i = 0; i < N; i++) {
-		a[i] = 5;
-	}
-	for (int i = 0; i < M; i++) {
-		b[i] = 4;
-	}
+    double simple_time_end = omp_get_wtime();
+    
+    cout << "Simple time " << simple_time_end - simple_time_start << endl;
 
-	double simple_time = calculate_time(a, b);
-	double parallel_time = calculate_parallel_time(a, b);
-	cout << "simple time " << simple_time << endl;
-	cout << "parallel time " << parallel_time << endl;
-	
-	return 0;
+
+    
+    for (i = 0; i < N; i++) {
+        assert(result_parallel[i] == result_simple[i]);
+    }
+
+    return 0;
 }
